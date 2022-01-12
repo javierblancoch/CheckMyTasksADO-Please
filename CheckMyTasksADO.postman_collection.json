@@ -1,0 +1,339 @@
+{
+	"info": {
+		"_postman_id": "fda0fb14-a7f5-4914-afca-306dd1ba28e8",
+		"name": "CheckMyTasksADO",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Review",
+			"item": [
+				{
+					"name": "Get Team Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"var project_name = jsonData.projectName\r",
+									"var team_name = jsonData.name\r",
+									"postman.setEnvironmentVariable(\"projectName\", project_name);\r",
+									"postman.setEnvironmentVariable(\"teamName\", team_name);\r",
+									"pm.test(\"Status get team details\", () => {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{PAT}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dev.azure.com/{{organization}}/_apis/projects/{{projectId}}/teams/{{teamId}}?api-version={{version}}",
+							"protocol": "https",
+							"host": [
+								"dev",
+								"azure",
+								"com"
+							],
+							"path": [
+								"{{organization}}",
+								"_apis",
+								"projects",
+								"{{projectId}}",
+								"teams",
+								"{{teamId}}"
+							],
+							"query": [
+								{
+									"key": "api-version",
+									"value": "{{version}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"var items = jsonData.workItems\r",
+									"var all_items = items.map(x => x.id).join(\",\");\r",
+									"postman.setEnvironmentVariable(\"items\", all_items);\r",
+									"pm.test(\"Status get items\", () => {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{PAT}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"query\": \"Select [System.Id] From WorkItems Where [System.IterationPath] = @CurrentIteration('[{{projectName}}]\\\\{{teamName}}') AND [System.WorkItemType] = 'Task' AND [System.AssignedTo] = @Me\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://dev.azure.com/{{organization}}/_apis/wit/wiql?api-version={{version}}",
+							"protocol": "https",
+							"host": [
+								"dev",
+								"azure",
+								"com"
+							],
+							"path": [
+								"{{organization}}",
+								"_apis",
+								"wit",
+								"wiql"
+							],
+							"query": [
+								{
+									"key": "api-version",
+									"value": "{{version}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Items",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var status = pm.environment.get(\"validateStatus\");\r",
+									"var jsonData = JSON.parse(responseBody);\r",
+									"var all_items = jsonData.value\r",
+									"\r",
+									"for (const item in all_items) {\r",
+									"    data = all_items[item]\r",
+									"    identifier = data.id\r",
+									"    fields = data.fields\r",
+									"    pm.test(identifier+\" status\", () => {\r",
+									"        pm.expect(fields[\"System.State\"]).to.eql(status);\r",
+									"    });    \r",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{PAT}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{username}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://dev.azure.com/{{organization}}/_apis/wit/workitems?ids={{items}}&fields=System.WorkItemType,System.State,System.CommentCount,System.Title,Microsoft.VSTS.Common.Activity,System.Description&api-version={{version}}",
+							"protocol": "https",
+							"host": [
+								"dev",
+								"azure",
+								"com"
+							],
+							"path": [
+								"{{organization}}",
+								"_apis",
+								"wit",
+								"workitems"
+							],
+							"query": [
+								{
+									"key": "ids",
+									"value": "{{items}}"
+								},
+								{
+									"key": "fields",
+									"value": "System.WorkItemType,System.State,System.CommentCount,System.Title,Microsoft.VSTS.Common.Activity,System.Description"
+								},
+								{
+									"key": "api-version",
+									"value": "{{version}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Projects",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{PAT}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dev.azure.com/{{organization}}/_apis/projects?api-version={{version}}",
+					"protocol": "https",
+					"host": [
+						"dev",
+						"azure",
+						"com"
+					],
+					"path": [
+						"{{organization}}",
+						"_apis",
+						"projects"
+					],
+					"query": [
+						{
+							"key": "api-version",
+							"value": "{{version}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Project Teams",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{PAT}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dev.azure.com/{{organization}}/_apis/projects/{{projectId}}/teams?api-version={{version}}",
+					"protocol": "https",
+					"host": [
+						"dev",
+						"azure",
+						"com"
+					],
+					"path": [
+						"{{organization}}",
+						"_apis",
+						"projects",
+						"{{projectId}}",
+						"teams"
+					],
+					"query": [
+						{
+							"key": "api-version",
+							"value": "{{version}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
