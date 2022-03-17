@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "fda0fb14-a7f5-4914-afca-306dd1ba28e8",
+		"_postman_id": "6df09965-89d3-4af2-aae0-eed44d42efad",
 		"name": "CheckMyTasksADO",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -167,18 +167,26 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"var status = pm.environment.get(\"validateStatus\");\r",
-									"var jsonData = JSON.parse(responseBody);\r",
+									"var status = pm.environment.get(\"validateStatus\")\r",
+									"var jsonData = JSON.parse(responseBody)\r",
 									"var all_items = jsonData.value\r",
+									"var day = new Date().getDay()-1\r",
+									"var hour = 8\r",
+									"var completed = 0.0\r",
 									"\r",
 									"for (const item in all_items) {\r",
 									"    data = all_items[item]\r",
 									"    identifier = data.id\r",
 									"    fields = data.fields\r",
+									"    completed += fields[\"Microsoft.VSTS.Scheduling.CompletedWork\"]\r",
 									"    pm.test(identifier+\" status\", () => {\r",
 									"        pm.expect(fields[\"System.State\"]).to.eql(status);\r",
 									"    });    \r",
-									"}"
+									"}\r",
+									"\r",
+									"pm.test(\"Total hours prev day \"+String(completed), () => {\r",
+									"    pm.expect(completed).to.be.gte(hour*day);\r",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -203,7 +211,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://dev.azure.com/{{organization}}/_apis/wit/workitems?ids={{items}}&fields=System.WorkItemType,System.State,System.CommentCount,System.Title,Microsoft.VSTS.Common.Activity,System.Description&api-version={{version}}",
+							"raw": "https://dev.azure.com/{{organization}}/_apis/wit/workitems?ids={{items}}&fields=System.WorkItemType,System.State,System.CommentCount,System.Title,Microsoft.VSTS.Common.Activity,System.Description,Microsoft.VSTS.Scheduling.CompletedWork&api-version={{version}}",
 							"protocol": "https",
 							"host": [
 								"dev",
@@ -223,7 +231,7 @@
 								},
 								{
 									"key": "fields",
-									"value": "System.WorkItemType,System.State,System.CommentCount,System.Title,Microsoft.VSTS.Common.Activity,System.Description"
+									"value": "System.WorkItemType,System.State,System.CommentCount,System.Title,Microsoft.VSTS.Common.Activity,System.Description,Microsoft.VSTS.Scheduling.CompletedWork"
 								},
 								{
 									"key": "api-version",
