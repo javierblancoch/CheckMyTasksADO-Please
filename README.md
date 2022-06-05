@@ -56,6 +56,10 @@ With a couple of clicks we can know which tasks we have not closed, the process 
 
 Thank you very much!
 
+## Extras
+Some adjustments you might need:
+- For custom iteration use **[System.IterationPath] = '{{projectName}}\\\Iteration_name'**
+
 ## Credits
 This project would not be possible without:
 - https://www.postman.com/
