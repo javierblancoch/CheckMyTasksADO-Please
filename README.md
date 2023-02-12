@@ -9,14 +9,14 @@ We import the collection and the environment
 
 ![Screenshot de CheckMyTasksADO](Screenshots/captura02.png)
 
-# Process
+## Process
 - Get your personal access token
 - Detail your organization
 - Indicate the project of your preference
 - Choose a team
 - Check tasks!!!
 
-# Get your personal access token
+## Get your personal access token
 A personal access token (PAT) is used as an alternate password to authenticate in Azure DevOps, the collection needs the token to avoid authentication problems.
 
 Fortunately, the process to obtain it is very well detailed in the following link
@@ -26,22 +26,22 @@ Fortunately, the process to obtain it is very well detailed in the following lin
 
 Note: When you create the token, you can specify some permissions, this could cause inconvenience, or you can choose "Full Access" for testing purposes only.
 
-# Detail your organization
+## Detail your organization
 Now that we have our token, we must detail which is our organization, this can be found by visiting your Azure DevOps and you must place it in the following environment variable.
 
 ![Screenshot de CheckMyTasksADO](Screenshots/captura04.png)
 
-# Indicate the project of your preference
+## Indicate the project of your preference
 To be able to choose the project you want, you must execute "Get Projects" and review the answer, you may have many, once you see the project you want, you must copy its id and place it in the following environment variable.
 
 ![Screenshot de CheckMyTasksADO](Screenshots/captura05.png)
 
-# Choose a team
+## Choose a team
 To be able to choose the team, you must execute "Get Project Teams" and review the answer, the teams that you will see will be from the project that you previously indicated, once you see the group you want, you must copy its id and place it in the following environment variable.
 
 ![Screenshot de CheckMyTasksADO](Screenshots/captura06.png)
 
-# Check tasks!!!
+## Check tasks!!!
 Finally now that we have completed the organization, the project and the team, it is time to start the review process.
 
 We must click on "Review", choose the option "Run" and start the process.
@@ -59,6 +59,36 @@ Thank you very much!
 ## Extras
 Some adjustments you might need:
 - For custom iteration use **[System.IterationPath] = '{{projectName}}\\\Iteration_name'**
+
+## Other use cases
+### Estimated vs Completed Hours
+This use case requires you to make some changes to the **Check items** request.
+- In Params add the following value to the list of fields **Microsoft.VSTS.Scheduling.OriginalEstimate**
+- In Tests replace the script with the following, you can adjust it if you require it
+```
+var status = pm.environment.get("validateStatus")
+var jsonData = JSON.parse(responseBody)
+var all_items = jsonData.value
+var day = 5
+var hour = 8
+var completed = 0.0
+var estimate = 0.0
+
+for (const item in all_items) {
+    data = all_items[item]
+    identifier = data.id
+    fields = data.fields
+    completed += fields["Microsoft.VSTS.Scheduling.CompletedWork"]
+    estimate += fields["Microsoft.VSTS.Scheduling.OriginalEstimate"]
+    pm.test(identifier+" status", () => {
+        pm.expect(fields["System.State"]).to.eql(status);
+    });    
+}
+
+pm.test("Estimate:"+String(estimate)+" - complete:"+String(completed), () => {
+    pm.expect(completed).to.be.gte(hour*day);
+});
+```
 
 ## Credits
 This project would not be possible without:
